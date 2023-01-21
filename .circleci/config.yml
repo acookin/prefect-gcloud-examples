@@ -1,0 +1,69 @@
+version: 2.1
+
+orbs:
+  gcp-cli: circleci/gcp-cli@1.8.3
+
+executors:
+  builder:
+    docker:
+      - image: google/cloud-sdk
+
+jobs:
+  push_img:
+    executor:
+      name: builder
+    steps:
+      - checkout
+      - setup_remote_docker
+      - gcp-cli/initialize
+      - gcp-cli/install
+      - run:
+          name: Push image to GCR
+          command: |
+            gcloud --quiet auth configure-docker
+
+            export IMAGE=gcr.io/${GOOGLE_PROJECT_ID}/prefect-flows:`git rev-parse --short HEAD`
+
+            cd prefect-flows
+            docker build -t ${IMAGE} .
+            docker push $IMAGE
+  update_k8s_manifests:
+    docker:
+      - image: cimg/python:3.9.13
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "b3:c0:df:5e:75:a6:aa:91:23:66:27:cc:fd:8c:e2:de"
+      - run:
+          name: "poetry install"
+          command: |
+            cd prefect-flows
+            poetry install
+      - run:
+          name: "generate manifests"
+          command: |
+            cd prefect-flows
+            poetry run python ./prefect_flows/cli.py gen-agent-manifests
+      - run:
+          name: "check diff"
+          command: |
+            if [[ `git status --porcelain` ]]; then
+              git config user.email "cibot@devnull.com"
+              git config user.name "CI Bot"
+              git add ./k8s
+              git commit -m "[automated] Update kubernetes manifests"
+              git push origin main
+              circleci step halt
+            else
+              echo "no changes"
+            fi
+
+workflows:
+  deploy:
+    jobs:
+      - update_k8s_manifests
+
+      - push_img:
+          requires:
+            - update_k8s_manifests

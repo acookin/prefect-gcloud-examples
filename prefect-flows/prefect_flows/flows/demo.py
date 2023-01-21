@@ -20,9 +20,9 @@ demo_flow_group = FlowGroup("demo")
             parameters={"name": "all"},
         ),
         DeploymentInfo(
-            name="hello-nobody",
+            name="hello-nope",
             schedule=IntervalSchedule(interval=timedelta(hours=6)),
-            parameters={"name": "nobody"},
+            parameters={"name": "nope"},
         ),
     ]
 )
@@ -31,32 +31,31 @@ def demo_flow(name: str):
     logger.info(f"Hello {name}")
 
 
-CHILD_DEPLOYMENT_NAME = "child-flow"
+CHILD_DEPLOYMENT = DeploymentInfo(
+    name="child-flow",
+    concurrency=2,
+)
 
 
 @demo_flow_group.flow(
     deployments=[
-        DeploymentInfo(
-            name=CHILD_DEPLOYMENT_NAME,
-            concurrency=2,
-        ),
+        CHILD_DEPLOYMENT,
     ]
 )
-def child_flow():
+def child_flow(datum: int):
     logger = get_run_logger()
+    logger.info(f"Child flow for datum {datum}")
     logger.info("Sleeping...")
     time.sleep(30)
-    logger.info("Im done now")
+    logger.info("I'm done now")
 
 
 @task
-async def trigger_child_flow():
-    deployment_name = "%s/%s" % (
-        child_flow.__name__.replace("_", "-"),
-        CHILD_DEPLOYMENT_NAME,
+async def trigger_child_flow(i: int):
+    return await CHILD_DEPLOYMENT.run_deployment(
+        child_flow,
+        parameters={"datum": i},
     )
-    flow_run = await run_deployment(name=deployment_name, timeout=0)
-    return flow_run.id
 
 
 @task
@@ -90,7 +89,7 @@ async def wait_for_flow_run(flow_run_id):
 )
 async def parent_flow():
     flow_runs = []
-    for _ in range(20):
-        flow_runs.append(await trigger_child_flow())
+    for i in range(20):
+        flow_runs.append(await trigger_child_flow(i))
     for run_id in flow_runs:
         await wait_for_flow_run(run_id)

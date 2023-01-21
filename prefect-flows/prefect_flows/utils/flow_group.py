@@ -4,14 +4,13 @@ from uuid import UUID
 
 from prefect import get_client
 from prefect.client.orion import OrionClient
-from prefect.deployments import Deployment
+from prefect.deployments import Deployment, run_deployment
 from prefect.exceptions import ObjectNotFound
 from prefect.flows import Flow, flow
 from prefect.orion.schemas.filters import DeploymentFilter, DeploymentFilterTags
 from prefect.orion.schemas.schedules import SCHEDULE_TYPES
 from prefect.infrastructure.kubernetes import KubernetesJob
 
-DEFAULT_WQ = "default"
 JOB_TTL_SECONDS = 120
 
 
@@ -79,6 +78,22 @@ class DeploymentInfo:
         )
         deployment_id = await deployment.apply()
         return deployment_id
+
+    async def run_deployment(
+        self,
+        flow_fn: Flow,
+        parameters: Optional[dict] = None,
+    ) -> UUID:
+        deployment_name = "%s/%s" % (
+            flow_fn.__name__.replace("_", "-"),
+            self.name,
+        )
+        flow_run = await run_deployment(
+            name=deployment_name,
+            timeout=0,
+            parameters=parameters,
+        )
+        return flow_run.id
 
 
 @dataclass
