@@ -1,0 +1,26 @@
+agent:
+  cloudApiConfig:
+    # -- prefect account ID
+    accountId: "8b7d877d-2544-475c-927d-e8fc292deaf9"
+    workspaceId: "1ac00705-dc7c-47f2-9e22-a4476c8f105f"
+
+    apiKeySecret:
+      # -- prefect API secret name
+      name: prefect-api-key
+      # -- prefect API secret key
+      key: key
+
+    # -- prefect cloud API url; the full URL is constructed as https://cloudUrl/accounts/accountId/workspaces/workspaceId
+    cloudUrl: https://api.prefect.cloud/api
+
+  replicaCount: 1
+
+  resources:
+    # -- the requested resources for the agent container
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    # -- the requested limits for the agent container
+    limits:
+      memory: 1Gi
+      cpu: 1000m

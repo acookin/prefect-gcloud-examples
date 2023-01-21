@@ -1,0 +1,144 @@
+---
+# Source: prefect-agent/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prefect-agent
+  namespace: "prefect"
+  labels:
+    app.kubernetes.io/name: prefect-agent
+    helm.sh/chart: prefect-agent-2022.12.22
+    app.kubernetes.io/instance: prefect-agent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: agent
+    prefect-version: 2.7.4-python3.10
+---
+# Source: prefect-agent/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prefect-agent
+  namespace: "prefect"
+  labels:
+    app.kubernetes.io/name: prefect-agent
+    helm.sh/chart: prefect-agent-2022.12.22
+    app.kubernetes.io/instance: prefect-agent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: agent
+    prefect-version: 2.7.4-python3.10
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log", "pods/status"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: [ "get", "list", "watch", "create", "update", "patch", "delete" ]
+---
+# Source: prefect-agent/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prefect-agent
+  labels:
+    app.kubernetes.io/name: prefect-agent
+    helm.sh/chart: prefect-agent-2022.12.22
+    app.kubernetes.io/instance: prefect-agent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: agent
+    prefect-version: 2.7.4-python3.10
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prefect-agent
+subjects:
+  - kind: ServiceAccount
+    name: prefect-agent
+    namespace: "prefect"
+---
+# Source: prefect-agent/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefect-agent
+  namespace: "prefect"
+  labels:
+    app.kubernetes.io/name: prefect-agent
+    helm.sh/chart: prefect-agent-2022.12.22
+    app.kubernetes.io/instance: prefect-agent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: agent
+    prefect-version: 2.7.4-python3.10
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prefect-agent
+      app.kubernetes.io/instance: prefect-agent
+      app.kubernetes.io/component: agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prefect-agent
+        helm.sh/chart: prefect-agent-2022.12.22
+        app.kubernetes.io/instance: prefect-agent
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: agent
+        prefect-version: 2.7.4-python3.10
+    spec:
+      serviceAccountName: prefect-agent
+      securityContext:
+        fsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+      containers:
+        - name: prefect-agent
+          image: "prefecthq/prefect:2.7.4-python3.10"
+          imagePullPolicy: IfNotPresent
+          command:
+            - prefect
+            - agent
+            - start
+            - --work-queue
+            - "default"
+          workingDir: /home/prefect
+          env:
+            - name: HOME
+              value: /home/prefect
+            - name: PREFECT_AGENT_PREFETCH_SECONDS
+              value: "10"
+            - name: PREFECT_AGENT_QUERY_INTERVAL
+              value: "5"
+            - name: PREFECT_API_URL
+              value: "https://api.prefect.cloud/api/accounts/8b7d877d-2544-475c-927d-e8fc292deaf9/workspaces/1ac00705-dc7c-47f2-9e22-a4476c8f105f"
+            - name: PREFECT_KUBERNETES_CLUSTER_UID
+              value: ""
+            - name: PREFECT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: prefect-api-key
+                  key:  key
+            - name: PREFECT_DEBUG_MODE
+              value: "false"
+          envFrom:
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1001
+          volumeMounts:
+            - mountPath: /home/prefect
+              name: scratch
+              subPathExpr: home
+            - mountPath: /tmp
+              name: scratch
+              subPathExpr: tmp
+      volumes:
+        - name: scratch
+          emptyDir: {}
