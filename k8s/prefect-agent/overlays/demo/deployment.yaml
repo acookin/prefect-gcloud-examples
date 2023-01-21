@@ -19,7 +19,7 @@ spec:
             - hello-all
             
             - --work-queue
-            - hello-nobody
+            - hello-nope
             
             - --work-queue
             - child-flow
