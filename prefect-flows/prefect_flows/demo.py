@@ -3,13 +3,11 @@ import time
 from datetime import timedelta
 
 from prefect import get_client, get_run_logger, task
-from prefect.deployments import run_deployment
-from prefect.orion.schemas.schedules import IntervalSchedule
-from prefect.orion.schemas.states import StateType
+from prefect.server.schemas.schedules import IntervalSchedule
+from prefect.server.schemas.states import StateType
+from prefect_utils.registry import DeploymentInfo, FlowRegistry
 
-from prefect_flows.utils.flow_group import DeploymentInfo, FlowGroup
-
-demo_flow_group = FlowGroup("demo")
+demo_flow_group = FlowRegistry("demo")
 
 
 @demo_flow_group.flow(

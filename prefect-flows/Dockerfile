@@ -1,6 +1,6 @@
-FROM python:3.9
+FROM python:3.10
 
-WORKDIR /opt/prefect/flows
+WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     \
@@ -8,16 +8,17 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100 \
     \
-    POETRY_VERSION=1.1.14 \
+    POETRY_VERSION=1.2.1 \
     POETRY_HOME="/opt/poetry" \
     PATH="${PATH}:/opt/poetry/bin/" \
     POETRY_NO_INTERACTION=1
 
 RUN curl -sSL https://install.python-poetry.org | python3 -
-COPY poetry.lock pyproject.toml ./
+ENV PREFECT_FLOW_DIR=/app/prefect_flows/
+
+COPY ./prefect-flows/poetry.lock prefect-flows/pyproject.toml ./
+COPY ./prefect-flows/prefect_flows ./prefect_flows
+COPY ./prefect-utils /prefect-utils
 
 RUN poetry config virtualenvs.create false && \
-    poetry install --no-dev
-
-COPY . ./
-
+    poetry install --only main

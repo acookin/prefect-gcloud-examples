@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefect-agent
+  labels:
+    component: prefect-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: prefect-agent
+  template:
+    metadata:
+      labels:
+        component: prefect-agent
+    spec:
+      serviceAccountName: prefect-agent
+      securityContext:
+        fsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+      containers:
+        - name: prefect-agent
+          image: "prefecthq/prefect:2.10.12-python3.10"
+          imagePullPolicy: IfNotPresent
+          command:
+            - prefect
+            - agent
+            - start
+            - --pool
+            - "$(WORK_POOL)"
+          workingDir: /home/prefect
+          env:
+            - name: HOME
+              value: /home/prefect
+            - name: PREFECT_AGENT_PREFETCH_SECONDS
+              value: "10"
+            - name: PREFECT_AGENT_QUERY_INTERVAL
+              value: "5"
+            - name: PREFECT_API_ENABLE_HTTP2
+              value: "true"
+          envFrom:
+            - configMapRef:
+                name: config
+            - secretKeyRef:
+                name: prefect-secret
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1001
+          volumeMounts:
+            - mountPath: /home/prefect
+              name: scratch
+              subPathExpr: home
+            - mountPath: /tmp
+              name: scratch
+              subPathExpr: tmp
+      volumes:
+        - name: scratch
+          emptyDir: {}

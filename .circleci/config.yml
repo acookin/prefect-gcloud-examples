@@ -9,7 +9,7 @@ executors:
       - image: google/cloud-sdk
 
 jobs:
-  push_img:
+  deploy:
     executor:
       name: builder
     steps:
@@ -24,46 +24,19 @@ jobs:
 
             export IMAGE=gcr.io/${GOOGLE_PROJECT_ID}/prefect-flows:`git rev-parse --short HEAD`
 
-            cd prefect-flows
-            docker build -t ${IMAGE} .
+            docker build -t ${IMAGE} -f ./prefect-flows/Dockerfile .
             docker push $IMAGE
-  update_k8s_manifests:
-    docker:
-      - image: cimg/python:3.9.13
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints:
-            - "b3:c0:df:5e:75:a6:aa:91:23:66:27:cc:fd:8c:e2:de"
+            echo "export DEPLOY_IMAGE=${IMAGE}" >> $BASH_ENV
       - run:
-          name: "poetry install"
+          name: Deploy
           command: |
             cd prefect-flows
             poetry install
-      - run:
-          name: "generate manifests"
-          command: |
-            cd prefect-flows
-            poetry run python ./prefect_flows/cli.py gen-agent-manifests
-      - run:
-          name: "check diff"
-          command: |
-            if [[ `git status --porcelain` ]]; then
-              git config user.email "cibot@devnull.com"
-              git config user.name "CI Bot"
-              git add ./k8s
-              git commit -m "[automated] Update kubernetes manifests"
-              git push origin main
-              circleci step halt
-            else
-              echo "no changes"
-            fi
+            poetry run prefect-util deploy --image ${DEPLOY_IMAGE} --pool demo \
+              --namespace demo --config-map demo-config --env dev --app demo-flows \
+              --service-account demo-flows --flow-registry prefect_flows.demo:demo_flow_group
 
 workflows:
   deploy:
     jobs:
-      - update_k8s_manifests
-
-      - push_img:
-          requires:
-            - update_k8s_manifests
+      - deploy

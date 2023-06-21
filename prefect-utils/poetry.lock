@@ -224,6 +224,17 @@ test = ["pretend", "pytest (>=6.2.0)", "pytest-benchmark", "pytest-cov", "pytest
 test-randomorder = ["pytest-randomly"]
 
 [[package]]
+name = "datadog"
+version = "0.45.0"
+description = "The Datadog Python library"
+category = "main"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
+
+[package.dependencies]
+requests = ">=2.6.0"
+
+[[package]]
 name = "dateparser"
 version = "1.1.8"
 description = "Date parsing library designed to parse dates from HTML pages"
@@ -702,22 +713,6 @@ websockets = ">=10.4"
 dev = ["cairosvg", "flaky", "ipython", "ipython (>=8.12.0,<8.13.0)", "jinja2", "mike", "mkdocs", "mkdocs-gen-files", "mkdocs-material", "mkdocstrings-python", "mock", "moto", "mypy", "numpy", "pillow", "pre-commit", "pytest (>7)", "pytest-asyncio (>=0.18.2)", "pytest-benchmark", "pytest-cov", "pytest-env", "pytest-flakefinder", "pytest-timeout", "pytest-xdist", "pytkdocs (>=0.14.2)", "pyyaml", "requests", "respx", "ruff", "setuptools (!=60.9.0)", "virtualenv", "watchfiles"]
 
 [[package]]
-name = "prefect-utils"
-version = "0.2.0"
-description = ""
-category = "main"
-optional = false
-python-versions = "^3.10"
-develop = false
-
-[package.dependencies]
-prefect = "^2.10.16"
-
-[package.source]
-type = "directory"
-url = "../prefect-utils"
-
-[[package]]
 name = "pyasn1"
 version = "0.5.0"
 description = "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)"
@@ -1140,7 +1135,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "5b0050e6e9580834794c77c6c10de64ab0380650fc94293a4c3d35b27d755977"
+content-hash = "f6149d755f70b58253565f4898506836b84e88a723393a33e2dde04fce8e8552"
 
 [metadata.files]
 aiosqlite = [
@@ -1423,6 +1418,10 @@ cryptography = [
     {file = "cryptography-41.0.1-pp39-pypy39_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:eb8163f5e549a22888c18b0d53d6bb62a20510060a22fd5a995ec8a05268df8a"},
     {file = "cryptography-41.0.1-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:8dde71c4169ec5ccc1087bb7521d54251c016f126f922ab2dfe6649170a3b8c5"},
     {file = "cryptography-41.0.1.tar.gz", hash = "sha256:d34579085401d3f49762d2f7d6634d6b6c2ae1242202e860f4d26b046e3a1006"},
+]
+datadog = [
+    {file = "datadog-0.45.0-py2.py3-none-any.whl", hash = "sha256:144fce48bda79484b102349f159c4ea4c7cd35361f9e0d031ddf931a922a38a4"},
+    {file = "datadog-0.45.0.tar.gz", hash = "sha256:6bffed67448cb4bf5dff559fb2acee1c06e7da8612b8e2a734f278b50b396603"},
 ]
 dateparser = [
     {file = "dateparser-1.1.8-py2.py3-none-any.whl", hash = "sha256:070b29b5bbf4b1ec2cd51c96ea040dc68a614de703910a91ad1abba18f9f379f"},
@@ -1723,7 +1722,6 @@ prefect = [
     {file = "prefect-2.10.16-py3-none-any.whl", hash = "sha256:deb8e8161ca76a9eef9e965defd24366753d7ea97fbf9695388016c5de372207"},
     {file = "prefect-2.10.16.tar.gz", hash = "sha256:bf3891c762f4d0398781fa9c2c3684d86bf42c70bb3052e5fcad34731d6a2393"},
 ]
-prefect-utils = []
 pyasn1 = [
     {file = "pyasn1-0.5.0-py2.py3-none-any.whl", hash = "sha256:87a2121042a1ac9358cabcaf1d07680ff97ee6404333bacca15f76aa8ad01a57"},
     {file = "pyasn1-0.5.0.tar.gz", hash = "sha256:97b7290ca68e62a832558ec3976f15cbf911bf5d7c7039d8b861c2a0ece69fde"},
